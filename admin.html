@@ -205,10 +205,10 @@ tr:hover td{background:rgba(0,0,0,0.02);}
     </div>
     <div class="login-title">Admin Panel</div>
     <div class="login-sub">লগইন করুন</div>
-    <input class="login-input" type="text" id="l-user" placeholder="Username" value="admin">
+    <input class="login-input" type="email" id="l-user" placeholder="Email" autocomplete="username">
     <input class="login-input" type="password" id="l-pass" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">🔐 Login</button>
-    <div class="login-err" id="login-err">❌ Username বা Password ভুল!</div>
+    <div class="login-err" id="login-err">❌ Email বা Password ভুল!</div>
   </div>
 </div>
 
@@ -597,6 +597,12 @@ tr:hover td{background:rgba(0,0,0,0.02);}
         <div class="fg"><label>New Password</label><input type="password" id="s-np" placeholder="New password"></div>
         <div class="fg"><label>Confirm Password</label><input type="password" id="s-cnp" placeholder="Confirm new password"></div>
         <button class="btn btn-p" onclick="changePass()">✅ Change Password</button>
+        <div class="divider"></div>
+        <div class="ss-title">Login Email</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px;font-family:'Hind Siliguri';">এখন login email: <b id="cur-admin-email"></b></div>
+        <div class="fg"><label>New Login Email</label><input type="email" id="s-ne" placeholder="yourmail@gmail.com"></div>
+        <div class="fg"><label>Current Password (নিশ্চিত করতে)</label><input type="password" id="s-ecp" placeholder="Current password"></div>
+        <button class="btn btn-p" onclick="changeLoginEmail()">✅ Change Email</button>
       </div>
       <div class="sc2" id="st-migration" style="display:none;">
         <div class="ss-title">⚙️ Data Migration (One-Time)</div>
@@ -889,6 +895,9 @@ let users = [{id:1,name:'Super Admin',phone:'01761266866',email:'muntahashop8@gm
 let settings = {};
 let banners = [];
 let adminPass = gd('mb_pass','admin123');
+// Admin login email — stored in STORE_DOC as adminEmail; changeable in Settings → Change Password.
+const DEFAULT_ADMIN_EMAIL = 'muntahashop8@gmail.com';
+let adminEmail = DEFAULT_ADMIN_EMAIL;
 let dataLoaded = false;
 
 // Dashboard-only aggregate counters (computed from a capped recent-orders fetch, NOT every order ever placed)
@@ -1121,16 +1130,17 @@ let curPrintO = null;
 // LOGIN
 // ══════════════════════════════════════════
 function doLogin(){
-  const u = document.getElementById('l-user').value;
+  const u = document.getElementById('l-user').value.trim().toLowerCase();
   const p = document.getElementById('l-pass').value;
-  if(u!=='admin'){ document.getElementById('login-err').style.display='block'; return; }
+  if(!u){ document.getElementById('login-err').style.display='block'; return; }
   const btn=document.querySelector('.login-btn');
   if(btn){btn.textContent='⏳ Loading...';btn.disabled=true;}
   document.getElementById('login-err').style.display='none';
   STORE_DOC.get().then(doc=>{
     const d=doc.exists?doc.data():{};
     adminPass = d.adminPass || gd('mb_pass','admin123');
-    if(p===adminPass){
+    adminEmail = (d.adminEmail || DEFAULT_ADMIN_EMAIL).toLowerCase();
+    if(u===adminEmail && p===adminPass){
       localStorage.setItem('mb_admin_session','1');
       enterAdminPanel(d);
       if(btn){btn.textContent='🔐 Login';btn.disabled=false;}
@@ -1152,6 +1162,7 @@ function enterAdminPanel(d){
   couriers=d.couriers&&d.couriers.length?d.couriers:couriers;
   users=d.users&&d.users.length?d.users:users;
   settings=d.settings||{}; banners=d.banners||[];
+  adminEmail=(d.adminEmail||DEFAULT_ADMIN_EMAIL).toLowerCase();
   dataLoaded=true;
   applyAdminLogo();
   startRealtimeSync();
@@ -1191,6 +1202,22 @@ function doLogout(){
   document.getElementById('admin-panel').style.display='none';
   document.getElementById('login-page').style.display='flex';
   document.getElementById('l-pass').value='';
+}
+
+function changeLoginEmail(){
+  const ne = document.getElementById('s-ne').value.trim().toLowerCase();
+  const cp = document.getElementById('s-ecp').value;
+  if(cp !== adminPass){ toast('Current password ভুল','var(--red)'); return; }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ne)){ toast('সঠিক email দিন','var(--red)'); return; }
+  STORE_DOC.set({adminEmail:ne},{merge:true}).then(()=>{
+    adminEmail = ne;
+    toast('Login email changed! আবার লগইন করুন ✅');
+    ['s-ne','s-ecp'].forEach(id=>document.getElementById(id).value='');
+    setTimeout(doLogout, 900);
+  }).catch(err=>{
+    console.error(err);
+    toast('Email change করতে সমস্যা হয়েছে','var(--red)');
+  });
 }
 
 function changePass(){
@@ -2743,6 +2770,7 @@ function loadSettings(){
   g('s-ip','invoice_prefix'); g('s-pp','invoice_perpage'); g('s-ii','invoice_info'); g('s-in','invoice_note');
   g('s-fb','fb'); g('s-tt','tiktok'); g('s-yt','yt'); g('s-ig','ig'); g('s-wa','wa');
   g('s-fbp','fbpixel'); g('s-tkp','tkpixel'); g('s-ga','ga');
+  const cae=document.getElementById('cur-admin-email'); if(cae) cae.textContent=adminEmail;
   g('s-ibl','ip_blacklist'); g('s-pbl','phone_blacklist'); g('s-so','single_order');
   renderLogoPreview();
 }
