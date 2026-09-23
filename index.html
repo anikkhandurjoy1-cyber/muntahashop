@@ -73,7 +73,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.97);backdrop
 @media(min-width:600px){.banner-wrap{height:380px;}}
 .banner-3d-stage{position:relative;width:100%;height:100%;}
 .banner-slides{position:absolute;inset:0;}
-.banner-slide{position:absolute;inset:0;width:100%;height:100%;overflow:hidden;display:flex;align-items:center;justify-content:flex-start;opacity:0;transform:scale(1.06);transition:opacity 1.1s ease,transform 1.4s ease;background-size:100% 100%;background-repeat:no-repeat;background-position:center;background-color:#0d0d14;}
+.banner-slide{position:absolute;inset:0;width:100%;height:100%;overflow:hidden;display:flex;align-items:center;justify-content:flex-start;opacity:0;transform:scale(1.06);transition:opacity 1.1s ease,transform 1.4s ease;background-size:cover;background-repeat:no-repeat;background-position:center;background-color:#0d0d14;}
 .banner-slide.active{opacity:1;transform:scale(1);z-index:5;}
 .banner-slide>.banner-mini-slideshow,.banner-slide>iframe{width:100%;height:100%;}
 .banner-slide-overlay{position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.55) 0%,rgba(0,0,0,.15) 45%,rgba(0,0,0,0) 70%);z-index:1;}
@@ -88,7 +88,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.97);backdrop
 
 /* Mini slideshow inside a single banner slide — used when a banner has multiple images */
 .banner-mini-slideshow{position:absolute;inset:0;}
-.bms-layer{position:absolute;inset:0;background-size:100% 100%;background-repeat:no-repeat;background-position:center;opacity:0;transition:opacity 1s ease-in-out;}
+.bms-layer{position:absolute;inset:0;background-size:cover;background-repeat:no-repeat;background-position:center;opacity:0;transition:opacity 1s ease-in-out;}
 .bms-layer.active{opacity:1;}
 /* B1 Grid */
 .b1{background:#000;}
@@ -830,12 +830,12 @@ function renderCustomerBanners(){
     const imgs = (b.images && b.images.length) ? b.images : (b.url ? [b.url] : []);
     if(b.type==='image' && imgs.length){
       if(imgs.length===1){
-        bg = `background-image:url('${cld(imgs[0],1200)}');background-size:100% 100%;background-repeat:no-repeat;background-position:center;background-color:#0d0d14;`;
+        bg = `background-image:url('${cld(imgs[0],1600)}');background-size:cover;background-repeat:no-repeat;background-position:center;background-color:#0d0d14;`;
       } else {
         // Multiple images on this one banner: render them as stacked layers that cross-fade
         // into each other automatically — a small slideshow living inside a single slide.
         mediaHtml = `<div class="banner-mini-slideshow" data-imgcount="${imgs.length}">
-          ${imgs.map((url,j)=>`<div class="bms-layer${j===0?' active':''}" style="background-image:url('${cld(url,1200)}');"></div>`).join('')}
+          ${imgs.map((url,j)=>`<div class="bms-layer${j===0?' active':''}" style="background-image:url('${cld(url,1600)}');"></div>`).join('')}
         </div>`;
       }
     } else if(b.type==='video' && b.videoUrl){
